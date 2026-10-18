@@ -35,13 +35,13 @@ RUN ./DockerInit.sh "$TARGETARCH"
 # ========================================================
 FROM alpine
 ENV TZ=Asia/Tehran
-ENV PORT=2053
+ENV PORT=8080
 ENV XUI_IN_DOCKER="true"
 ENV XUI_MAIN_FOLDER="/app"
 ENV XUI_ENABLE_FAIL2BAN="true"
 ENV XUI_DB_TYPE=""
 ENV XUI_DB_DSN=""
-ENV XUI_PORT=2053
+ENV XUI_PORT=8080
 WORKDIR /app
 
 RUN apk add --no-cache --update \
@@ -50,7 +50,8 @@ RUN apk add --no-cache --update \
   fail2ban \
   bash \
   curl \
-  openssl
+  openssl \
+  netcat-openbsd
 
 COPY --from=builder /app/build/ /app/
 COPY --from=builder /app/DockerEntrypoint.sh /app/
@@ -69,6 +70,9 @@ RUN chmod +x \
   /app/x-ui \
   /usr/bin/x-ui
 
-EXPOSE 2053
+# Expose 8080 to match Railway request and our entrypoint fallback
+EXPOSE 8080
+HEALTHCHECK --interval=15s --timeout=3s --start-period=10s CMD nc -z 127.0.0.1 ${PORT:-8080} || exit 1
+
 CMD ["./x-ui"]
 ENTRYPOINT ["/app/DockerEntrypoint.sh"]
