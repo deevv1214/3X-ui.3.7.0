@@ -35,6 +35,13 @@ RUN ./DockerInit.sh "$TARGETARCH"
 # ========================================================
 FROM alpine
 ENV TZ=Asia/Tehran
+ENV PORT=2053
+ENV XUI_IN_DOCKER="true"
+ENV XUI_MAIN_FOLDER="/app"
+ENV XUI_ENABLE_FAIL2BAN="true"
+ENV XUI_DB_TYPE=""
+ENV XUI_DB_DSN=""
+ENV XUI_PORT=2053
 WORKDIR /app
 
 RUN apk add --no-cache --update \
@@ -50,7 +57,6 @@ COPY --from=builder /app/DockerEntrypoint.sh /app/
 COPY --from=builder /app/x-ui.sh /usr/bin/x-ui
 COPY --from=builder /app/internal/web/translation /app/internal/web/translation
 
-
 # Configure fail2ban
 RUN rm -f /etc/fail2ban/jail.d/alpine-ssh.conf \
   && cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local \
@@ -63,11 +69,6 @@ RUN chmod +x \
   /app/x-ui \
   /usr/bin/x-ui
 
-ENV XUI_IN_DOCKER="true"
-ENV XUI_MAIN_FOLDER="/app"
-ENV XUI_ENABLE_FAIL2BAN="true"
-ENV XUI_DB_TYPE=""
-ENV XUI_DB_DSN=""
 EXPOSE 2053
-CMD [ "./x-ui" ]
-ENTRYPOINT [ "/app/DockerEntrypoint.sh" ]
+CMD ["./x-ui"]
+ENTRYPOINT ["/app/DockerEntrypoint.sh"]
